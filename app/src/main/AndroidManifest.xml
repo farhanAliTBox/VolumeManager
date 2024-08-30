@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VolumeManager"
         tools:targetApi="31">
+        <receiver android:name=".ProfileAlarmReceiver" />
         <activity
             android:name=".UpdateProfileActivity"
             android:exported="false" />

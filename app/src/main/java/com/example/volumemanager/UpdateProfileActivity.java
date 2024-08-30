@@ -7,10 +7,9 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.Calendar;
 
 public class UpdateProfileActivity extends AppCompatActivity {
 
@@ -19,6 +18,8 @@ public class UpdateProfileActivity extends AppCompatActivity {
     private CheckBox mondayCheckBox;
     private TimePicker startTimePicker, endTimePicker;
     private Button updateProfileButton;
+    private DatabaseHelper databaseHelper;
+    private Profile profile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,45 +29,11 @@ public class UpdateProfileActivity extends AppCompatActivity {
         profileNameEditText = findViewById(R.id.edit_profile_name);
         volumeSeekBar = findViewById(R.id.seekbar_volume);
         mondayCheckBox = findViewById(R.id.checkbox_monday);
-
         updateProfileButton = findViewById(R.id.btn_add_profile);
-
-
         startTimePicker = findViewById(R.id.timepicker_start);
         endTimePicker = findViewById(R.id.timepicker_end);
 
-
-
-        TimePicker startPicker = (TimePicker) findViewById(R.id.timepicker_start);
-        startPicker.setIs24HourView(true);
-        Calendar calendar1 = Calendar.getInstance();
-
-        int h1 = calendar1.get(Calendar.HOUR_OF_DAY);
-        int m1 = calendar1.get(Calendar.MINUTE);
-
-        startPicker.setCurrentHour(h1);
-        startPicker.setCurrentMinute(m1);
-
-        TimePicker endPicker = (TimePicker) findViewById(R.id.timepicker_start);
-        endPicker.setIs24HourView(true);
-        Calendar calendar2 = Calendar.getInstance();
-
-        int h2 = calendar2.get(Calendar.HOUR_OF_DAY);
-        int m2 = calendar2.get(Calendar.MINUTE);
-
-        endPicker.setCurrentHour(h2);
-        endPicker.setCurrentMinute(m2);
-
-
-
-
-
-
-
-
-
-
-
+        databaseHelper = new DatabaseHelper(this);
         updateProfileButton.setText("Update Profile");
 
         // Set the TimePickers to 24-hour view
@@ -80,13 +47,37 @@ public class UpdateProfileActivity extends AppCompatActivity {
             endTimePicker.setMinute(0);
         }
 
-        // Load the profile data into the fields (This is an example)
+        // Load the profile data into the fields
         String profileName = getIntent().getStringExtra("profile_name");
-        profileNameEditText.setText(profileName);
+        profile = databaseHelper.getProfileByName(profileName);
+        if (profile != null) {
+            profileNameEditText.setText(profile.getName());
+            volumeSeekBar.setProgress(profile.getVolume());
+            // Here you should load the days and times from the profile into the UI elements
+        }
 
         updateProfileButton.setOnClickListener(view -> {
-            // Update profile logic
+            String profileName2 = profileNameEditText.getText().toString();
+            int volume = volumeSeekBar.getProgress();
+            String startTime = startTimePicker.getHour() + ":" + startTimePicker.getMinute();
+            String endTime = endTimePicker.getHour() + ":" + endTimePicker.getMinute();
+
+            Profile updatedProfile = new Profile();
+            updatedProfile.setId(profile.getId());
+            updatedProfile.setName(profileName2);
+            updatedProfile.setVolume(volume);
+            updatedProfile.setStartTime(startTime);
+            updatedProfile.setEndTime(endTime);
+            updatedProfile.setDays(profile.getDays()); // Assuming days remain the same
+
+            databaseHelper.updateProfile(updatedProfile);
+
+            // Update alarms
+            AlarmHelper.setProfileAlarm(this, updatedProfile);
+
+            Toast.makeText(UpdateProfileActivity.this, "Profile updated!", Toast.LENGTH_SHORT).show();
             finish();
         });
+
     }
 }

@@ -70,14 +70,12 @@
         <TimePicker
             android:id="@+id/timepicker_start"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:is24HourView="true" />
+            android:layout_height="wrap_content" />
 
         <TimePicker
             android:id="@+id/timepicker_end"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:is24HourView="true" />
+            android:layout_height="wrap_content"/>
 
         <Button
             android:id="@+id/btn_add_profile"

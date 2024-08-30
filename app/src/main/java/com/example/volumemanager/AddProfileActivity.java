@@ -7,6 +7,9 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TimePicker;
+import android.content.Intent;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +20,7 @@ public class AddProfileActivity extends AppCompatActivity {
     private CheckBox mondayCheckBox;
     private TimePicker startTimePicker, endTimePicker;
     private Button addProfileButton;
+    private DatabaseHelper databaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +34,8 @@ public class AddProfileActivity extends AppCompatActivity {
         endTimePicker = findViewById(R.id.timepicker_end);
         addProfileButton = findViewById(R.id.btn_add_profile);
 
+        databaseHelper = new DatabaseHelper(this);
+
         // Set the TimePickers to 24-hour view
         startTimePicker.setIs24HourView(true);
         endTimePicker.setIs24HourView(true);
@@ -42,8 +48,30 @@ public class AddProfileActivity extends AppCompatActivity {
         }
 
         addProfileButton.setOnClickListener(view -> {
-            // Add profile to database or list
-            finish();
+            String profileName = profileNameEditText.getText().toString();
+            int volume = volumeSeekBar.getProgress();
+            String startTime = startTimePicker.getHour() + ":" + startTimePicker.getMinute();
+            String endTime = endTimePicker.getHour() + ":" + endTimePicker.getMinute();
+
+            // For simplicity, let's assume all days are selected.
+            String days = "Mon,Tue,Wed,Thu,Fri,Sat,Sun";
+
+            long id = databaseHelper.addProfile(profileName, volume, days, startTime, endTime, false);
+
+            if (id > 0) {
+                // Set alarms for the new profile
+                Profile newProfile = databaseHelper.getProfileById((int) id);
+                if (newProfile != null) {
+                    AlarmHelper.setProfileAlarm(this, newProfile);
+                }
+
+                Toast.makeText(AddProfileActivity.this, "Profile added!", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(AddProfileActivity.this, MainActivity.class));
+                finish();
+            } else {
+                Toast.makeText(AddProfileActivity.this, "Failed to add profile.", Toast.LENGTH_SHORT).show();
+            }
         });
+
     }
 }

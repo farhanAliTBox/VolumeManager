@@ -12,6 +12,8 @@ public class ProfileActivity extends AppCompatActivity {
     private Switch activateProfileSwitch;
     private Button deleteProfileButton, updateProfileButton;
     private String profileName;
+    private DatabaseHelper databaseHelper;
+    private Profile profile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -19,24 +21,31 @@ public class ProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         profileName = getIntent().getStringExtra("profile_name");
+        databaseHelper = new DatabaseHelper(this);
+        profile = databaseHelper.getProfileByName(profileName);
 
         activateProfileSwitch = findViewById(R.id.switch_activate_profile);
         deleteProfileButton = findViewById(R.id.btn_delete_profile);
         updateProfileButton = findViewById(R.id.btn_update_profile);
 
-        activateProfileSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Activate or deactivate profile
-        });
+        if (profile != null) {
+            activateProfileSwitch.setChecked(profile.isActive());
 
-        deleteProfileButton.setOnClickListener(view -> {
-            // Delete profile logic
-            finish();
-        });
+            activateProfileSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                profile.setActive(isChecked);
+                databaseHelper.updateProfile(profile);
+            });
 
-        updateProfileButton.setOnClickListener(view -> {
-            Intent intent = new Intent(ProfileActivity.this, UpdateProfileActivity.class);
-            intent.putExtra("profile_name", profileName);
-            startActivity(intent);
-        });
+            deleteProfileButton.setOnClickListener(view -> {
+                databaseHelper.deleteProfile(profile.getId());
+                finish();
+            });
+
+            updateProfileButton.setOnClickListener(view -> {
+                Intent intent = new Intent(ProfileActivity.this, UpdateProfileActivity.class);
+                intent.putExtra("profile_name", profileName);
+                startActivity(intent);
+            });
+        }
     }
 }
